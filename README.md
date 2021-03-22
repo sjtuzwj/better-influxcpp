@@ -38,7 +38,7 @@ make
 ./storage_client
 ```
 Log:
-![avatar](../pic/log.PNG)
+![avatar](./pic/log.PNG)
 
 ## Feature
 - Use brpc to enhance http performance.
