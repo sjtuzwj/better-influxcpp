@@ -1,12 +1,12 @@
 # influxdb C++ Client in BRPC
 ## Background 
-Influxdb don't support official C++ client lib so that there are a lot of client on github.    
+Influxdb don't support official C++ client lib so that there are a lot of clients on github.    
 Luckily, influx provide convinient Restful API, DIY client is easy.   
 e.g. 
 - [orca-zhang/influxdb-cpp](https://github.com/orca-zhang/influxdb-cpp)
 - [awegrzyn/influxdb-cxx](https://github.com/awegrzyn/influxdb-cxx)
 
-However, those lib implement http naively, without connection pool and async call, and so on.
+However, these lib implements http naively, without connection pool and async call, and so on.
 - Without connection pool, frequent requests will produce considerable overheads.
 - Without async call, the latency to cloud is a disaster.
 
