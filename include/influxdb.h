@@ -5,6 +5,7 @@
 #include <brpc/channel.h>
 #include "point.h"
 
+class InfluxTimer;
 /*
 *now support influxdb1 only
 *TODO: change uri pattern to be compatible
@@ -13,8 +14,18 @@
 class InfluxClient
 {
     private:
+        //buffer size
+        int bufferSize = 0;
+        //std::string
+        std::string buffer;
+        //max buffer_size
+        int maxBufferSize = 0;
+        //period
+        int period;
+        //flush timer
+        InfluxTimer * timer = nullptr;
         //brpc channel 
-        brpc::Channel* channel;
+        brpc::Channel* channel = nullptr;
         //influx db uri, domain name or ip:port
         std::string uri;
         //influx db name
@@ -24,6 +35,8 @@ class InfluxClient
         std::string write_url;
         //influxdb query url;
         std::string query_url;
+        //is buffering
+        bool IsBuffer();
         //generate url to prevent concat cost in each call
         void Init();
     public:
@@ -31,8 +44,15 @@ class InfluxClient
         InfluxClient()=delete;
         InfluxClient(brpc::Channel* in_channel, std::string in_uri, std::string in_db);
 
+        //flush buffer
+        void Flush();
+        //size > 1 is batching
+        //size = 0 is no batching
+        void BatchSize(int bufferSize);
+        //only >=0 meaningful
+        void BatchTime(int period);
         //TODO: batch write
-        //void BacthWrite();
+        void BatchWrite(const Point & point);
 
         //write a point to influxdb
         //TODO: async handle return value
@@ -46,13 +66,6 @@ class InfluxClient
         //TODO: json parser
         //TODO: add open source json lib
         std::string Query(std::string sql) const;
-
-        //setter useless, because construct overhead is little
-        //you can use a new client instead of reuse it
-        //TODO: check before set
-        void SetChannel(brpc::Channel* new_channel);
-        void SetURI(std::string new_uri);
-        void SetDB(std::string new_db);
 };
 
 #endif

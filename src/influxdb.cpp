@@ -1,6 +1,7 @@
 #include <butil/logging.h>
 #include "util.h"
 #include "influxdb.h"
+#include "timer.h"
 
 /*
 *now support influxdb1 only
@@ -87,22 +88,71 @@ void InfluxClient::Init()
     query_url = uri + "/query?db=" + db;
 }
                    
-//setter useless, because construct overhead is little
-//you can use a new client instead of reuse it
-void InfluxClient::SetChannel(brpc::Channel* new_channel)
+
+//is buffering
+bool InfluxClient::IsBuffer()
 {
-    channel = new_channel;
+    return maxBufferSize > 1 || period > 0;
+    
+}
+//flush buffer
+//need lock!
+void InfluxClient::Flush()
+{
+    if(buffer.size()==0)
+        return;
+    brpc::Controller cntl;
+    cntl.http_request().uri() = write_url;  // Request URL
+    cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
+    butil::IOBufBuilder os;    
+    LOG(INFO) << "write to influxdb: " << buffer;
+    os  << buffer;    
+    bufferSize = 0;
+    buffer.clear();
+    os.move_to(cntl.request_attachment());
+    channel->CallMethod(NULL, &cntl, NULL, NULL, NULL/*done*/);
 }
 
-void InfluxClient::SetURI(std::string new_uri)
+//size > 1 is batching
+//size = 0 is no batching
+void InfluxClient::BatchSize(int in_bufferSize)
 {
-    uri = new_uri;
-    Init();
+    if(in_bufferSize > 1 || in_bufferSize == 0)
+        maxBufferSize = in_bufferSize;
 }
 
-void InfluxClient::SetDB(std::string new_db)
+//only >=0 meaningful
+void InfluxClient::BatchTime(int in_period)
 {
-    db = new_db;
-    Init();
+    if(period >= 0)
+    {
+    period = in_period;
+    if(timer)
+        delete timer;
+    if(in_period == 0){
+        timer = nullptr;
+        return;
+    }
+    else 
+    timer = new InfluxTimer(in_period, this);  
+    }
 }
 
+//batch write
+//if not batching call
+void InfluxClient::BatchWrite(const Point & point)
+{
+    if(IsBuffer())
+    {
+    buffer += point.toLineProtocol();
+    buffer += '\n';
+    bufferSize++;
+    //batch size and overflow
+    if(maxBufferSize > 1 && bufferSize>=maxBufferSize)
+        Flush();
+    }
+    else
+    { 
+        Write(point);
+    }
+}

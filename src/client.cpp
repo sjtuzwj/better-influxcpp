@@ -33,14 +33,15 @@ int main(int argc, char* argv[])
     }
 
     InfluxClient client(&ts_channel,"127.0.0.1:8086","test");
-
+    client.BatchTime(5);
     int i = 0;
     while (!brpc::IsAskedToQuit()) 
     {        
-        TSAsyncUpdate(client,"test", "VentureZhu", i, i & 1);
+        
+        TSBatchUpdate(client,"test", "VentureZhu", i, i & 1);
         TSQuery(client,"select * from test where status = 1");
         i++;
-        usleep(FLAGS_interval_ms * 5000L);  
+        usleep(FLAGS_interval_ms * 1000L);  
     }
 
     LOG(INFO) << "Client is going to quit";

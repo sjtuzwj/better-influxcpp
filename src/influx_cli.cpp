@@ -8,6 +8,18 @@
 
 
 
+
+//INFLUX INSERT POINT EXAMPLE
+void TSBatchUpdate(InfluxClient & client, std::string measure, std::string author, int id , int status)
+{
+    Point point{measure};
+    point.addField("id",id);
+    point.addField("status",status);
+    point.addTag("author",author);
+    
+    client.BatchWrite(point);
+}
+
 //INFLUX INSERT POINT EXAMPLE
 void TSAsyncUpdate(const InfluxClient & client, std::string measure, std::string author, int id , int status)
 {

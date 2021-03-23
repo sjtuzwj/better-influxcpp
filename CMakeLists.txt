@@ -141,7 +141,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_ProfilerStop")
 endif()
 
-add_executable(influx_client src/client.cpp src/influx_cli.cpp src/point.cpp src/util.cpp src/influxdb.cpp ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(influx_client src/client.cpp src/timer.cpp src/influx_cli.cpp src/point.cpp src/util.cpp src/influxdb.cpp ${PROTO_SRC} ${PROTO_HEADER})
 
 target_link_libraries(influx_client ${BRPC_LIB} ${DYNAMIC_LIB})
 

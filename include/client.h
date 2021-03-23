@@ -5,6 +5,9 @@
 #include "influxdb.h"
 
 //INFLUX INSERT POINT EXAMPLE
+void TSBatchUpdate(InfluxClient & client,  std::string measure, std::string author, int id , int status);
+
+//INFLUX INSERT POINT EXAMPLE
 void TSAsyncUpdate(const InfluxClient & client,  std::string measure, std::string author, int id , int status);
 
 //INFLUX INSERT POINT EXAMPLE
