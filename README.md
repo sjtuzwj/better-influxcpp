@@ -43,10 +43,11 @@ Log:
 ## Feature
 - Use brpc to enhance http performance.
 - Basic API support: single insert / query
+- async call
+- batch size
+- batch time
 
 ## TODO            
 - unit test  
-- async call
 - JSON result parser
 - more API
-- batch write
