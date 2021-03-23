@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     int i = 0;
     while (!brpc::IsAskedToQuit()) 
     {        
-        TSUpdate(client,"test", "VentureZhu", i, i & 1);
+        TSAsyncUpdate(client,"test", "VentureZhu", i, i & 1);
         TSQuery(client,"select * from test where status = 1");
         i++;
         usleep(FLAGS_interval_ms * 5000L);  

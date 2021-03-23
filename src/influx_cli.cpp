@@ -7,6 +7,19 @@
 #include "point.h"
 
 
+
+//INFLUX INSERT POINT EXAMPLE
+void TSAsyncUpdate(const InfluxClient & client, std::string measure, std::string author, int id , int status)
+{
+    Point point{measure};
+    point.addField("id",id);
+    point.addField("status",status);
+    point.addTag("author",author);
+    
+    client.AsyncWrite(point);
+}
+
+
 //INFLUX INSERT POINT EXAMPLE
 void TSUpdate(const InfluxClient & client, std::string measure, std::string author, int id , int status)
 {

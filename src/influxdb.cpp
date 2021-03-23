@@ -14,6 +14,37 @@ db(in_db)
     Init();
 }
 
+static void OnRPCDone(brpc::Controller* cntl,google::protobuf::Message* response) {
+    // unique_ptr helps us to delete response/cntl automatically. unique_ptr in gcc 3.4 is an emulated version.
+    std::unique_ptr<brpc::Controller> cntl_guard(cntl);
+    if (cntl->Failed()) {
+        LOG(INFO) << "write to influxdb failed";
+        // RPC failed. fields in response are undefined, don't use.
+    } else {
+        LOG(INFO) << "write to influxdb success: " << cntl->response_attachment();
+        // RPC succeeded, response has what we want. Continue the post-processing.
+    }
+    // Closure created by NewCallback deletes itself at the end of Run.
+}
+
+//write a point to influxdb
+//TODO: async handle return value
+//TODO: add buffer param
+//maybe need a url reader lock 
+
+void  InfluxClient::AsyncWrite(const Point & point) const
+{
+    brpc::Controller* cntl = new brpc::Controller;
+    google::protobuf::Message* response = nullptr;
+    cntl->http_request().uri() = write_url;  // Request URL
+    cntl->http_request().set_method(brpc::HTTP_METHOD_POST);
+    butil::IOBufBuilder os;
+    os  << point.toLineProtocol();
+    os.move_to(cntl->request_attachment());
+    channel->CallMethod(NULL, cntl, NULL, NULL, brpc::NewCallback(OnRPCDone,cntl,response));
+    LOG(INFO) << "async write to influxdb return: " << point.toLineProtocol();
+}
+
 
 //write a point to influxdb
 //TODO: async handle return value

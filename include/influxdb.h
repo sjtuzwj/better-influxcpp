@@ -37,7 +37,7 @@ class InfluxClient
         //write a point to influxdb
         //TODO: async handle return value
         //TODO: add buffer param to handle response
-        //void AsyncWrite(Point& , Status &);
+        void AsyncWrite(const Point & point) const;
 
         //sync write a point to influxdb 
         void Write(const Point & point) const;
