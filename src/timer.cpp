@@ -31,5 +31,5 @@ void InfluxTimer::Task(void* arg) {
 }
  
 void InfluxTimer::Flush() {
-  client->Flush();
+  client->AsyncFlush();
 }

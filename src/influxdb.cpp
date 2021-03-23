@@ -15,6 +15,15 @@ db(in_db)
     Init();
 }
 
+//close client and flush buffer sync
+InfluxClient::~InfluxClient()
+{
+    //release timer
+    BatchTime(0);
+    SyncFlush();
+    BatchSize(0);
+}
+
 static void OnRPCDone(brpc::Controller* cntl,google::protobuf::Message* response) {
     // unique_ptr helps us to delete response/cntl automatically. unique_ptr in gcc 3.4 is an emulated version.
     std::unique_ptr<brpc::Controller> cntl_guard(cntl);
@@ -95,22 +104,43 @@ bool InfluxClient::IsBuffer()
     return maxBufferSize > 1 || period > 0;
     
 }
-//flush buffer
-//need lock!
-void InfluxClient::Flush()
+//flush buffer sync because if exit main, async can't call back
+void InfluxClient::SyncFlush()
 {
-    if(buffer.size()==0)
+    if(!IsBuffer() || buffer.size()==0)
         return;
     brpc::Controller cntl;
     cntl.http_request().uri() = write_url;  // Request URL
     cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
     butil::IOBufBuilder os;    
-    LOG(INFO) << "write to influxdb: " << buffer;
+    LOG(INFO) << "flush to influxdb sync:\n" << buffer;
     os  << buffer;    
     bufferSize = 0;
+    os.move_to(cntl.request_attachment());    
+    //important because os use right value,  can't clear before move_to
     buffer.clear();
-    os.move_to(cntl.request_attachment());
     channel->CallMethod(NULL, &cntl, NULL, NULL, NULL/*done*/);
+}
+
+//flush buffer
+//need lock!
+void InfluxClient::AsyncFlush()
+{
+    if(!IsBuffer() || buffer.size()==0)
+        return;
+    brpc::Controller* cntl = new brpc::Controller;
+    google::protobuf::Message* response = nullptr;
+    cntl->http_request().uri() = write_url;  // Request URL
+    cntl->http_request().set_method(brpc::HTTP_METHOD_POST);
+    butil::IOBufBuilder os;    
+    LOG(INFO) << "flush to influxdb async:\n" << buffer;
+    os  << buffer;    
+    bufferSize = 0;
+    os.move_to(cntl->request_attachment());    
+    //important because os use right value,  can't clear before move_to
+    buffer.clear();
+    channel->CallMethod(NULL, cntl, NULL, NULL, 
+    brpc::NewCallback(OnRPCDone,cntl,response)/*done*/);
 }
 
 //size > 1 is batching
@@ -149,7 +179,7 @@ void InfluxClient::BatchWrite(const Point & point)
     bufferSize++;
     //batch size and overflow
     if(maxBufferSize > 1 && bufferSize>=maxBufferSize)
-        Flush();
+        AsyncFlush();
     }
     else
     { 
