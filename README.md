@@ -1,7 +1,8 @@
-# influxdb C++ Client in BRPC
+# better-influxcpp
 ## Background 
 Influxdb don't support official C++ client lib so that there are a lot of clients on github.    
-Luckily, influx provide convinient Restful API, DIY client is easy.   
+Luckily, influx provide convinient Restful API, DIY client is easy.  
+I use brpc(better rpc) to provide a better influxcpp client.
 e.g. 
 - [orca-zhang/influxdb-cpp](https://github.com/orca-zhang/influxdb-cpp)
 - [awegrzyn/influxdb-cxx](https://github.com/awegrzyn/influxdb-cxx)
