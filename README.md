@@ -49,6 +49,7 @@ Log:
 - batch time
 
 ## TODO            
-- unit test  
-- JSON result parser
+- unit test
+- JSON result parser(well I choose to set header to application to csv, and parse csv)
 - more API
+
